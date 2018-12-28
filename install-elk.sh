@@ -21,8 +21,10 @@ echo "deb [arch=amd64] https://packages.elastic.co/curator/5/debian stable main"
 apt-get -qq update
 
 # Use java 8 - newer versions not yet supported by logstash
-status "Installing packages"
-apt-get install -qq openjdk-8-jdk apache2 elasticsearch kibana logstash elasticsearch-curator > /dev/null
+status "Installing OpenJDK 8"
+apt-get install -qq openjdk-8-jdk > /dev/null
+status "Installing the rest of the packages"
+apt-get install -qq apache2 elasticsearch kibana logstash elasticsearch-curator > /dev/null
 
 status "Configuring elasticsearch"
 echo "network.host: localhost" >> /etc/elasticsearch/elasticsearch.yml
