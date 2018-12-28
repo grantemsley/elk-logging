@@ -70,6 +70,19 @@ echo "30 2 * * 0 /usr/bin/curator --config /etc/curator/config.yml /etc/curator/
 
 
 
+status "Configuring firewall"
+cp /root/elk-logging/ufw/applications.d/* /etc/ufw/applications.d/
+info "Allow SSH"
+ufw allow OpenSSH
+info "Allow Apache"
+ufw allow "Apache Full"
+info "Allow logstash"
+ufw allow Logstash
+#info "Allow elasticsearch from other cluster mbmers"
+#ufw allow from 192.168.0.50 to any app elasticsearch
+ufw enable
+
+
 
 
 status "Enable and start services"
