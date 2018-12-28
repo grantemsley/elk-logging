@@ -4,27 +4,25 @@ set -e
 
 # Functions to print text in color
 status () {
-	printf -- "\033[32m%s\033[0m\n" "$1"
+    printf -- "\033[32m%s\033[0m\n" "$1"
 }
 info () {
-	printf -- "\033[37m  %s\033[0m\n" "$1"
+    printf -- "\033[37m  %s\033[0m\n" "$1"
 }
 
 status "Cloning git repo to /root/elk-logging"
-git clone https://github.com/grantemsley/elk-logging.git /tmp/elk-logging
+git clone https://github.com/grantemsley/elk-logging.git /root/elk-logging
 
 status "Configuring elasticsearch package sources"
 wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
-apt-get install apt-transport-https
+apt-get -qq install apt-transport-https > /dev/null
 echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" > /etc/apt/sources.list.d/elastic-6.x.list
 echo "deb [arch=amd64] https://packages.elastic.co/curator/5/debian stable main" > /etc/apt/sources.list.d/elastic-curator-5.list
-apt-get update
+apt-get -qq update
 
 # Use java 8 - newer versions not yet supported by logstash
 status "Installing packages"
-apt-get install -qq openjdk-8-jdk 
-apt-get install -qq apache2
-apt-get install -qq apache2 elasticsearch kibana logstash elasticsearch-curator
+apt-get install -qq openjdk-8-jdk apache2 elasticsearch kibana logstash elasticsearch-curator > /dev/null
 
 status "Configuring elasticsearch"
 echo "network.host: localhost" >> /etc/elasticsearch/elasticsearch.yml
@@ -40,15 +38,16 @@ done
 
 status "Loading all index templates"
 for filename in /root/elk-logging/index-templates/*.json; do
-	info "Loading $filename"
-	basefile=$(basename $filename .json)
-	curl -XPUT -H 'Content-Type: application/json' "http://localhost:9200/_template/$basefile" -d@$filename
+    [ -e "$filename" ] || continue
+    info "Loading $filename"
+    basefile=$(basename $filename .json)
+    curl -XPUT -H 'Content-Type: application/json' "http://localhost:9200/_template/$basefile" -d@$filename
 done
 
 status "Configuring apache to reverse proxy kibana"
 a2enmod proxy
 a2enmod proxy_http
-a2dissiste 000-default.conf
+a2dissite 000-default.conf
 cp /root/elk-logging/apache2/kibana.conf /etc/apache2/sites-available/
 a2ensite kibana.conf
 
