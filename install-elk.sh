@@ -31,14 +31,14 @@ echo "network.host: localhost" >> /etc/elasticsearch/elasticsearch.yml
 echo "xpack.monitoring.collection.enabled: true" >> /etc/elasticsearch/elasticsearch.yml
 echo "node.name: ${HOSTNAME}" >> /etc/elasticsearch/elasticsearch.yml
 
+status "Starting elasticsearch"
 systemctl start elasticsearch
-# Wait for elasticsearch to be ready
 while [ $(curl --write-out %{http_code} --silent --output /dev/null http://localhost:9200/_cat/health?h=st) != 200 ]; do
 	info "Waiting for elasticsearch to start..."
 	sleep 2
 done
 
-status "Loading index templates"
+status "Loading all index templates"
 for filename in /root/elk-logging/index-templates/*.json; do
 	info "Loading $filename"
 	basefile=$(basename $filename .json)
@@ -49,39 +49,23 @@ status "Configuring apache to reverse proxy kibana"
 a2enmod proxy
 a2enmod proxy_http
 a2dissiste 000-default.conf
-cd /etc/apache2/sites-available/
-wget https://raw.githubusercontent.com/grantemsley/elk-logging/master/apache2/kibana.conf
+cp /root/elk-logging/apache2/kibana.conf /etc/apache2/sites-available/
 a2ensite kibana.conf
 
 status "Configuing logstash"
 echo "queue.type: persisted" >> /etc/logstash/logstash.yml
 echo "xpack.monitoring.enabled: true" >> /etc/logstash/logstash.yml
 echo "xpack.monitoring.elasticsearch.url: ['http://localhost:9200']" >> /etc/logstash/logstash.yml
-
-
-cd /etc/logstash/conf.d
-wget --quiet https://raw.githubusercontent.com/grantemsley/elk-logging/master/logstash/01-inputs.conf
-wget --quiet https://raw.githubusercontent.com/grantemsley/elk-logging/master/logstash/10-syslog.conf
-wget --quiet https://raw.githubusercontent.com/grantemsley/elk-logging/master/logstash/11-pfsense.conf
-wget --quiet https://raw.githubusercontent.com/grantemsley/elk-logging/master/logstash/30-outputs.conf
-mkdir /etc/logstash/conf.d/patterns
-cd /etc/logstash/conf.d/patterns
-wget --quiet https://raw.githubusercontent.com/grantemsley/elk-logging/master/logstash/pfsense_2_4_2.grok
-mkdir /etc/logstash/templates
-cd /etc/logstash/templates
-wget https://raw.githubusercontent.com/grantemsley/elk-logging/master/index-templates/logstash-es6x.json
+cp -R /root/elk-logging/logstash/* /etc/logstash/
 
 status "Downloading geoip database"
-cd /etc/logstash
-wget --quiet http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz
-gunzip GeoLite2-City.mmdb.gz
+wget --quiet http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz -O /etc/logstash/GeoLite2-City.mmdb.gz
+gunzip /etc/logstash/GeoLite2-City.mmdb.gz
 
 
 status "Configure curator to indices older than 60 days at 2:30am every Sunday"
 mkdir /etc/curator
-cd /etc/curator
-wget https://raw.githubusercontent.com/grantemsley/elk-logging/master/curator/config.yml
-wget https://raw.githubusercontent.com/grantemsley/elk-logging/master/curator/delete_olderthan_60days.yml
+cp /root/elk-logging/curator/* /etc/curator/
 echo "30 2 * * 0 /usr/bin/curator --config /etc/curator/config.yml /etc/curator/delete_olderthan_60days.yml" > /etc/cron.d/curator
 
 
