@@ -1,0 +1,7 @@
+{
+    "id": "winauth",
+    "name": "Windows Authentication",
+    "description": "Authentication and security data",
+    "color": "#e0f3a4",
+    "initials": "WA"
+}
