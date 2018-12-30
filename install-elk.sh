@@ -45,13 +45,24 @@ for filename in /root/elk-logging/index-templates/*.json; do
     basefile=$(basename $filename .json)
     curl -XPUT -H 'Content-Type: application/json' "http://localhost:9200/_template/$basefile" -d@$filename
 done
+echo
+
+status "Starting kibana"
+systemctl start kibana
+while [ $(curl --write-out %{http_code} --silent --output /dev/null http://localhost:5601) != 200 ]; do
+    info "Waiting for kibana to start..."
+    sleep 2
+done
+
+status "Importing kibana spaces and saved objects
+/usr/bin/python3 /root/elk-logging/kibana/import-spaces.py
 
 status "Configuring apache to reverse proxy kibana"
-a2enmod proxy
-a2enmod proxy_http
-a2dissite 000-default.conf
+a2enmod proxy > /dev/null
+a2enmod proxy_http > /dev/null
+a2dissite 000-default.conf > /dev/null
 cp /root/elk-logging/apache2/kibana.conf /etc/apache2/sites-available/
-a2ensite kibana.conf
+a2ensite kibana.conf > /dev/null
 
 status "Configuing logstash"
 echo "queue.type: persisted" >> /etc/logstash/logstash.yml
@@ -74,23 +85,23 @@ echo "30 2 * * 0 /usr/bin/curator --config /etc/curator/config.yml /etc/curator/
 status "Configuring firewall"
 cp /root/elk-logging/ufw/applications.d/* /etc/ufw/applications.d/
 info "Allow SSH"
-ufw allow OpenSSH
+ufw allow OpenSSH > /dev/null
 info "Allow Apache"
-ufw allow "Apache Full"
+ufw allow "Apache Full" > /dev/null
 info "Allow logstash"
-ufw allow Logstash
+ufw allow Logstash > /dev/null
 #info "Allow elasticsearch from other cluster mbmers"
 #ufw allow from 192.168.0.50 to any app elasticsearch
-ufw enable
+ufw --force enable
 
 
 
 
 status "Enable and start services"
 systemctl daemon-reload
-systemctl enable logstash.service
-systemctl enable kibana.service
-systemctl enable elasticsearch.service
+systemctl enable logstash.service > /dev/null
+systemctl enable kibana.service > /dev/null
+systemctl enable elasticsearch.service > /dev/null
 systemctl restart elasticsearch
 systemctl restart kibana
 systemctl restart logstash
