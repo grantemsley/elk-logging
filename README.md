@@ -1,8 +1,7 @@
 # elk-logging
+Various install scripts and configurations for logging with ELK stack
 
-
-
-Various configurations for logging with ELK stack
-
-
-Based on http://pfelk.3ilson.com/
+Resources used:
+- http://pfelk.3ilson.com/
+- https://www.syspanda.com/index.php/category/elasticsearch/
+- https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/default.aspx
