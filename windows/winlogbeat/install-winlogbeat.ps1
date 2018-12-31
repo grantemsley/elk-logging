@@ -31,7 +31,7 @@ If(!(Test-Path "\\${ComputerName}\C$\Program Files")) {
 }
 
 # Test that powershell remoting is setup on the remote computer
-if(!(Test-WSMan -ComputerName $ComputerName -ErrorAction Ignore))
+if(!(Test-WSMan -ComputerName $ComputerName -ErrorAction Ignore)) {
     Write-Host "Test-WSMan failed, unable to do powershell remoting to $ComputerName"
     exit 3
 }
@@ -44,7 +44,7 @@ If (!(Test-Path ".\download\winlogbeat-${winlogbeatversion}-windows-x86_64\winlo
 
 # Copy files to the remote computer
 Write-Host "Copying files to remote computer"
-#Copy-Item -Recurse ".\download\winlogbeat-${winlogbeatversion}-windows-x86_64\*" "\\${ComputerName}\c$\Program Files\winlogbeat"
+Copy-Item -Recurse ".\download\winlogbeat-${winlogbeatversion}-windows-x86_64" "\\${ComputerName}\c$\Program Files\winlogbeat"
 
 # Edit config file and copy to the remote computer. Also make sure it has windows line endings
 Write-Host "Generating config file"
