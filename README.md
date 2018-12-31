@@ -5,6 +5,8 @@ Resources used:
 - http://pfelk.3ilson.com/
 - https://www.syspanda.com/index.php/category/elasticsearch/
 - https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/default.aspx
+- https://github.com/jepayneMSFT/WEFFLES
+- https://github.com/palantir/windows-event-forwarding
 
 # Scripts
 

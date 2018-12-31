@@ -1,9 +1,19 @@
-# Configuring Windows Auditing
+# Getting Event Logs from Windows to Elasticsearch
 
-## Group Policy
+I'm using two methods of collecting the logs.  The first, installed on all domain controllers, is WinLogBeat. DCs have some of the most critical logs in them, and I want to make sure they get to ES quickly.
+
+For all the other servers and workstations, I'm using Windows Event Forwarding. This has the advantage of not requiring any additional software, being configurable by group policy, and encrypting the data in transit.
+
+
+
+## Configuring Windows Auditing
+
+Before we can gather event logs, we need to make sure the important events are actually being logged.
+
+### Group Policy
 Create a group policy for auditing, and configure with the audit policies shown in the screenshots in the grouppolicy folder.
 
-## SACL Entries
+### SACL Entries
 
 To actually audit some changes in active directory, you need to create SACL entries to tell AD to create the audit logs.
 
@@ -27,3 +37,15 @@ Select Everyone as the principal, type success, and applies to this object and a
 - Delete Organizational Unit objects
 - Create User objects
 - Delete User objects
+
+## Install WinLogBeats on Domain Controllers
+
+There's a handy script in the winlogbeat folder.  In powershell, just run:
+
+.\install-winlogbeat.ps1 -Computername <domaincontroller name> -LogStashServer <ip address of logstash server> -Config domaincontroller
+
+## Configure Windows Event Forwarding
+
+You need to setup a windows server that will collect all the events and forward them on to ElasticSearch.
+
+The script setup-event-forwarding.ps1 can be run on the server to configure everything.

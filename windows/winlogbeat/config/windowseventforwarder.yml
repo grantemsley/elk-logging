@@ -1,0 +1,8 @@
+winlogbeat.event_logs:
+  - name: ForwardedEvents
+    ignore_older: 72h
+tags: ["Forwarded"]
+
+output.logstash:
+  hosts: ["logstashserver:5044"]
+
