@@ -1,0 +1,19 @@
+winlogbeat.event_logs:
+  - name: Application
+    ignore_older: 72h
+  - name: Security
+  - name: System
+  - name: "Microsoft-Windows-TerminalServices-RDPClient/Operational,Microsoft-Windows-TerminalServices-LocalSessionManager/Admin,Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"
+    event_id: 23,24,25,1102
+    ignore_older: 72h
+  - name: "Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurity,Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurityVerbose,Microsoft-Windows-Windows Firewall With Advanced Security/Firewall,Microsoft-Windows-Windows Firewall With Advanced Security/FirewallVerbose,Microsoft-Windows-Windows Firewall With Advanced Security/Network Isolation Operational"
+    event_id: 2004,2005,2006,2033,2009
+    ignore_older: 72h
+  - name: "Microsoft-Windows-WindowsUpdateClient/Operational"
+    event_id: 20,24,25,31,34,35
+    ignore_older: 72h
+tags: ["DC"]
+
+output.logstash:
+  hosts: ["logstashserver:5044"]
+
