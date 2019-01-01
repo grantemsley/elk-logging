@@ -10,3 +10,9 @@ wevtutil sl forwardedevents /ms:512000000
 
 # Run quick config for subscription service
 wecutil qc -quiet
+
+# Import the subscriptions
+Get-ChildItem .\subscriptions -Filter *.xml | Foreach-Object {
+    Write-Host Creating subscription $_.FullName
+    wecutil cs $_.FullName
+}
