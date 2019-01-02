@@ -32,5 +32,5 @@
   <Locale Language="en-US"/>
   <LogFile>ForwardedEvents</LogFile>
   <AllowedSourceNonDomainComputers/>
-  <AllowedSourceDomainComputers>O:NSG:NSD:(A;;GA;;;DC)(A;;GA;;;NS)(A;;GA;;;DD)</AllowedSourceDomainComputers>
+  <AllowedSourceDomainComputers>O:NSG:NSD:(A;;GA;;;DC)(A;;GA;;;NS)</AllowedSourceDomainComputers>
 </Subscription>

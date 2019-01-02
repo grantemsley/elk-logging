@@ -1,7 +1,7 @@
 <Subscription xmlns="http://schemas.microsoft.com/2006/03/windows/events/subscription">
   <SubscriptionId>Group-Policy-Errors</SubscriptionId>
   <SubscriptionType>SourceInitiated</SubscriptionType>
-  <Description>Group Policy errors. </Description>
+  <Description>Group Policy errors.</Description>
   <Enabled>true</Enabled>
   <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
   <ConfigurationMode>Custom</ConfigurationMode>
@@ -38,5 +38,5 @@
   <Locale Language="en-US"/>
   <LogFile>ForwardedEvents</LogFile>
   <AllowedSourceNonDomainComputers/>
-  <AllowedSourceDomainComputers>O:NSG:NSD:(A;;GA;;;DC)(A;;GA;;;NS)(A;;GA;;;DD)</AllowedSourceDomainComputers>
+  <AllowedSourceDomainComputers>O:NSG:NSD:(A;;GA;;;DC)(A;;GA;;;NS)</AllowedSourceDomainComputers>
 </Subscription>
