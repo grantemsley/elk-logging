@@ -1,14 +1,14 @@
 <Subscription xmlns="http://schemas.microsoft.com/2006/03/windows/events/subscription">
-  <SubscriptionId>Device-Guard</SubscriptionId>
+  <SubscriptionId>Hyper-V-VID</SubscriptionId>
   <SubscriptionType>SourceInitiated</SubscriptionType>
-  <Description>Events related to Windows Device Guard.</Description>
+  <Description>Hyper-V Event Logs</Description>
   <Enabled>true</Enabled>
   <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
   <ConfigurationMode>Custom</ConfigurationMode>
   <Delivery Mode="Push">
     <Batching>
       <MaxItems>5</MaxItems>
-      <MaxLatencyTime>900000</MaxLatencyTime>
+      <MaxLatencyTime>300000</MaxLatencyTime>
     </Batching>
     <PushSettings>
       <Heartbeat Interval="1800000"/>
@@ -16,10 +16,9 @@
   </Delivery>
   <Query><![CDATA[
     <QueryList>
-      <Query Id="0" Path="Microsoft-Windows-DeviceGuard/Operational">
-        <!-- Device Guard Events -->
-        <Select Path="Microsoft-Windows-DeviceGuard/Operational">*</Select>
-      </Query>
+  <Query Id="0" Path="Microsoft-Windows-Hyper-V-VID-Admin">
+    <Select Path="Microsoft-Windows-Hyper-V-VID-Admin">*</Select>
+  </Query>
     </QueryList>]]></Query>
   <ReadExistingEvents>true</ReadExistingEvents>
   <TransportName>http</TransportName>
