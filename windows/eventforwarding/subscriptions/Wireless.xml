@@ -22,6 +22,30 @@
         <!-- 5633: A request was made to authenticate to a wired network. -->
         <Select Path="Security">*[System[(EventID=5632 or EventID=5633)]]</Select>
       </Query>
+      <Query Id="1">
+    	<!-- Network Connection Status (Wired and Wireless) -->
+    	<Select Path="Microsoft-Windows-NetworkProfile/Operational">
+          *[System[Provider[@Name='Microsoft-Windows-NetworkProfile'] and (EventID=10000 or EventID=10001) and Level=4]]
+    	</Select>
+      </Query>
+      <Query Id="2">
+    	<!-- Wifi Connections/Disconnections Success -->
+    	<Select Path="Microsoft-Windows-WLAN-AutoConfig/Operational">
+          *[System[Provider[@Name='Microsoft-Windows-WLAN-AutoConfig'] and (EventID=8000 or EventID=8001 or EventID=8003 or EventID=8011 or EventID=11000 or EventID=11001) and Level=4]]
+        </Select>
+	    <!-- Wifi Connections Failed -->
+     	<Select Path="Microsoft-Windows-WLAN-AutoConfig/Operational">
+     	  *[System[Provider[@Name='Microsoft-Windows-WLAN-AutoConfig'] and (EventID=8002 or EventID=11002) and Level=2 ]]
+        </Select>
+    	<!-- Wifi Connection Security Status (Encryption Info) -->
+    	<Select Path="Microsoft-Windows-WLAN-AutoConfig/Operational">
+	      *[System[Provider[@Name='Microsoft-Windows-WLAN-AutoConfig'] and (EventID=11004 or EventID=11005 or EventID=11010 or EventID=11006) and (Level=2 or Level=4)]]
+        </Select>
+    	<!-- Wifi Connection Security Authentication Status -->
+        <Select Path="Microsoft-Windows-WLAN-AutoConfig/Operational">	
+      	  *[System[Provider[@Name='Microsoft-Windows-WLAN-AutoConfig'] and (EventID=12011 or EventID=12012 or EventID=12013) and (Level=2 or Level=4)]]
+        </Select>
+      </Query>
     </QueryList>]]></Query>
   <ReadExistingEvents>true</ReadExistingEvents>
   <TransportName>http</TransportName>
