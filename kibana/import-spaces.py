@@ -13,9 +13,10 @@
 # _type => type
 # _source => attributes
 # _migrationVersion => migrationVersion
+# remove _meta
 
 
-import os, sys, requests
+import os, sys, requests, json, codecs
 from pprint import pprint
 
 # Change to the script's directory
@@ -74,15 +75,23 @@ for directory in directories:
 
     # Read in the export.json file
     with open(export) as f:
-        data = f.read()
+        data = json.load(f)
 
-    # Fix the field names
-    data = data.replace('"_id":', '"id":')
-    data = data.replace('"_type":', '"type":')
-    data = data.replace('"_source":', '"attributes":')
-    data = data.replace('"_migrationVersion":', '"migrationVersion":')
+    # Fix the fields in the json
+    for item in data:
+        if '_id' in item:
+            item['id'] = item.pop('_id')
+        if '_type' in item:
+            item['type'] = item.pop('_type')
+        if '_source' in item:
+            item['attributes'] = item.pop('_source')
+        if '_migrationVersion' in item:
+            item['migrationVersion'] = item.pop('_migrationVersion')
+        if '_meta' in item:
+            del item['_meta']
 
-    response = requests.post(f'http://localhost:5601/s/{spaceid}/api/saved_objects/_bulk_create', headers=headers, data=data)
+    d = json.dumps(data)
+    response = requests.post(f'http://localhost:5601/s/{spaceid}/api/saved_objects/_bulk_create', headers=headers, data=d)
 
     if response.status_code != 200:
         sys.stderr.write(f"Error importing objects for {spaceid} - HTTP status code {response.status_code}, message: {response.content}\n")
