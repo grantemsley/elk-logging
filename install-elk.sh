@@ -41,11 +41,12 @@ preflight_checks () {
         error "This script must be run as root."
         exit 1
     fi
+    status "Preflight checks passed"
 }
 
 install_packages () {
     status "Configuring elasticsearch package sources"
-    wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+    wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - > /dev/null
     apt-get -qq install apt-transport-https > /dev/null
     echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" > /etc/apt/sources.list.d/elastic-6.x.list
     echo "deb [arch=amd64] https://packages.elastic.co/curator/5/debian stable main" > /etc/apt/sources.list.d/elastic-curator-5.list
@@ -83,7 +84,7 @@ load_index_templates () {
 start_kibana () {
     status "Starting kibana"
     systemctl start kibana
-    while [ $(curl --write-out %{http_code} --silent --output /dev/null http://localhost:5601) != 200 ]; do
+    while [ $(curl -L --write-out %{http_code} --silent --output /dev/null http://localhost:5601) != 200 ]; do
         info "Waiting for kibana to start..."
         sleep 2
     done
