@@ -9,23 +9,28 @@ cd "${0%/*}"
 main () {
     preflight_checks
     configure
-    status "Creating $NODETYPE ELK node"
-    install_packages
-    configure_elasticsearch
-
-    # On standalone nodes, or the first node in a cluster, load the index templates, kibana spaces, and configure curator
-    # Additional nodes don't need that - index templates and kibana data are stored in elasticsearch for the entire cluster
-    if [ "$NODETYPE" == "Standalone" -o "$NODETYPE" == "First" ]; then
-        start_elasticsearch
+    if [ "$NODETYPE" == "ImportOnly" ]; then
         load_index_templates
-        start_kibana
         load_kibana_data
+    else
+	    status "Creating $NODETYPE ELK node"
+        install_packages
+        configure_elasticsearch
+        configure_apache
         configure_curator
+        configure_logstash
+        configure_firewall
+    
+        # On standalone nodes, or the last node in a cluster, load the index templates, kibana spaces, and configure curator
+        # Only has to be done on one node - index templates and kibana data are stored in elasticsearch for the entire cluster
+        if [ "$NODETYPE" == "Standalone" -o "$NODETYPE" == "FinalNode" ]; then
+            start_elasticsearch
+            load_index_templates
+            start_kibana
+            load_kibana_data
+        fi
+        start_services
     fi
-    configure_apache
-    configure_logstash
-    configure_firewall
-    start_services
     status "Done!"
 }
 
@@ -59,7 +64,7 @@ configure () {
     HEIGHT=$(($(tput lines) / 2))
 
     get_nodetype
-    if [ "$NODETYPE" == "First" -o "$NODETYPE" == "Additional" ]; then
+    if [ "$NODETYPE" == "ClusterNode" -o "$NODETYPE" == "LastNode" ]; then
         get_clustername
         get_hosts
     fi
@@ -88,8 +93,9 @@ configure () {
 get_nodetype () {
     NODETYPE=$(whiptail --title "ELK Setup" --menu "What type of server do you want to build?" 0 0 10 \
         "Standalone" "     A single ELK server" \
-        "First" "     First node in a cluster - indexes and dashboards will be imported" \
-        "Additional" "     Additional node in a cluster - skips importing data" \
+        "ClusterNode" "     A node in a cluster - skips importing data to ElasticSearch" \
+        "LastNode" "     The last node in a cluster - waits for the cluster to form and imports data" \
+	    "ImportOnly" "     Just import templates and spaces to existing cluster (if you forgot to use LastNode for the final node)" \
         3>&1 1>&2 2>&3) || error "Installation canceled"
 }
 
@@ -114,6 +120,7 @@ get_hosts () {
         error "You must have at least 3 nodes to prevent split-brain problems. If you want a single node, choose Standalone."
     fi
     # Calculate how many nodes needed to make a quorum - has to be >50% of nodes or split brain can occur, where two isolated groups of nodes have different masters and diverge from each other.
+    # Only needed in elasticsearch 6.x - 7.0 replaces it with cluster.initial_master_nodes
     MINIMUMMASTERS=$(($NODECOUNT / 2 + 1 ))
 
 }
@@ -137,8 +144,8 @@ install_packages () {
 start_elasticsearch () {
     status "Starting elasticsearch"
     systemctl start elasticsearch
-    while [ $(curl --write-out %{http_code} --silent --output /dev/null http://localhost:9200/_cat/health?h=st) != 200 ]; do
-        info "Waiting for elasticsearch to start..."
+    while [ $(curl --write-out %{http_code} --silent --output /dev/null http://localhost:9200/cluster/health) != 200 ]; do
+        info "Waiting for elasticsearch to start... check for errors in /var/log/elasticsearch/ if stuck here"
         sleep 2
     done
 }
@@ -175,15 +182,21 @@ configure_elasticsearch () {
     else
         echo "network.host: [ _local_, _site_ ]" >> /etc/elasticsearch/elasticsearch.yml
         echo "cluster.name: $CLUSTERNAME" >> /etc/elasticsearch/elasticsearch.yml
-        echo "discovery.zen.minimum_master_nodes: $MINIMUMMASTERS" >> /etc/elasticsearch/elasticsearch.yml
         echo "discovery.zen.ping.unicast.hosts:" >> /etc/elasticsearch/elasticsearch.yml
         for i in "${HOSTS[@]}"; do
             echo "  - $i" >> /etc/elasticsearch/elasticsearch.yml
         done
+	fi
+
+    # Find the elasticsearch version. 6.x needs discovery.zen.minimum_master_nodes, 7.x needs cluster.initial_master_nodes
+    ESVERSION=$(dpkg-query --showformat='${Version}' --show elasticsearch | cut -d "." -f1)
+    if [ "$ESVERSION" -eq 7 ]; then
         echo "cluster.initial_master_nodes: " >> /etc/elasticsearch/elasticsearch.yml
         for i in "${HOSTS[@]}"; do
             echo "  - $i" >> /etc/elasticsearch/elasticsearch.yml
         done
+    else
+        echo "discovery.zen.minimum_master_nodes: $MINIMUMMASTERS" >> /etc/elasticsearch/elasticsearch.yml
     fi
 }
 
@@ -214,7 +227,9 @@ load_kibana_data () {
 
 configure_curator () {
     status "Configure curator to indices older than 60 days at 2:30am every Sunday"
-    mkdir /etc/curator
+    if [ ! -d /etc/curator ]; then
+        mkdir /etc/curator
+    fi
     cp ./curator/* /etc/curator/
     echo "30 2 * * 0 /usr/bin/curator --config /etc/curator/config.yml /etc/curator/delete_olderthan_60days.yml" > /etc/cron.d/curator
 }
@@ -228,8 +243,12 @@ configure_firewall () {
     ufw allow "Apache Full" > /dev/null
     info "Allow logstash"
     ufw allow Logstash > /dev/null
-    #info "Allow elasticsearch from other cluster members"
-    #ufw allow from 192.168.0.50 to any app elasticsearch
+    if [ "$NODETYPE" != "Standalone" ]; then
+        info "Allow elasticsearch from other cluster members"
+        for i in "${HOSTS[@]}"; do
+            ufw allow from $i to any app elasticsearch
+        done
+    fi
     ufw --force enable
 }
 
@@ -239,10 +258,10 @@ start_services () {
     systemctl enable logstash.service > /dev/null
     systemctl enable kibana.service > /dev/null
     systemctl enable elasticsearch.service > /dev/null
-    systemctl restart elasticsearch
-    systemctl restart kibana
-    systemctl restart logstash
-    systemctl restart apache2
+    systemctl start elasticsearch
+    systemctl start kibana
+    systemctl start logstash
+    systemctl start apache2
 }
 
 main
