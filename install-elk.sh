@@ -261,7 +261,7 @@ start_services () {
     systemctl start elasticsearch
     systemctl start kibana
     systemctl start logstash
-    systemctl start apache2
+    systemctl restart apache2
 }
 
 main
