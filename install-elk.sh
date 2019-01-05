@@ -73,7 +73,7 @@ configure () {
     echo "Ready to build elasticsearch node with these settings:"
     echo " "
     echo "           Node type: $NODETYPE"
-    if [ "$NODETYPE" != "Standalone" ]; then
+    if [ "$NODETYPE" != "Standalone" -a "$NODETYPE" != "ImportOnly" ]; then
         echo "        Cluster name: $CLUSTERNAME"
         echo "          Node count: $NODECOUNT"
         echo "Minimum master nodes: $MINIMUMMASTERS"
