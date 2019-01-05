@@ -23,7 +23,7 @@ main () {
     
         # On standalone nodes, or the last node in a cluster, load the index templates, kibana spaces, and configure curator
         # Only has to be done on one node - index templates and kibana data are stored in elasticsearch for the entire cluster
-        if [ "$NODETYPE" == "Standalone" -o "$NODETYPE" == "FinalNode" ]; then
+        if [ "$NODETYPE" == "Standalone" -o "$NODETYPE" == "LastNode" ]; then
             start_elasticsearch
             load_index_templates
             start_kibana
