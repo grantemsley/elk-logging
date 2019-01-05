@@ -1,19 +1,29 @@
 #!/bin/bash
 # Installs and configures full ELK Stack
-set -e
+
+# Make sure we stop on any error - also makes it easier to stop the entire script by exiting with an error code from a function
+set -euo pipefail
+
 cd "${0%/*}"
 
 main () {
     preflight_checks
+    configure
+    status "Creating $NODETYPE ELK node"
     install_packages
-    configure_elasticsearch_standalone
-    start_elasticsearch
-    load_index_templates
-    start_kibana
-    configure_kibana
+    configure_elasticsearch
+
+    # On standalone nodes, or the first node in a cluster, load the index templates, kibana spaces, and configure curator
+    # Additional nodes don't need that - index templates and kibana data are stored in elasticsearch for the entire cluster
+    if [ "$NODETYPE" == "Standalone" -o "$NODETYPE" == "First" ]; then
+        start_elasticsearch
+        load_index_templates
+        start_kibana
+        load_kibana_data
+        configure_curator
+    fi
     configure_apache
     configure_logstash
-    configure_curator
     configure_firewall
     start_services
     status "Done!"
@@ -26,7 +36,8 @@ info () {
     printf -- "\033[37m  %s\033[0m\n" "$1"
 }
 error () {
-    printf -- "\031[37mError: %s\033[0m\n" "$1"
+    printf -- "\033[31mError: %s\033[0m\n" "$1"
+    exit 1
 }
 
 preflight_checks () {
@@ -39,9 +50,72 @@ preflight_checks () {
     # Make sure we're running as root.
     if ! [ $(id -u) == 0 ]; then
         error "This script must be run as root."
-        exit 1
     fi
     status "Preflight checks passed"
+}
+
+configure () {
+    WIDTH=$(($(tput cols) - 20))
+    HEIGHT=$(($(tput lines) / 2))
+
+    get_nodetype
+    if [ "$NODETYPE" == "First" -o "$NODETYPE" == "Additional" ]; then
+        get_clustername
+        get_hosts
+    fi
+
+    echo "#################################################################"
+    echo "Ready to build elasticsearch node with these settings:"
+    echo " "
+    echo "           Node type: $NODETYPE"
+    if [ "$NODETYPE" != "Standalone" ]; then
+        echo "        Cluster name: $CLUSTERNAME"
+        echo "          Node count: $NODECOUNT"
+        echo "Minimum master nodes: $MINIMUMMASTERS"
+        echo "               Hosts: ${HOSTS[@]}"
+    fi
+    echo " "
+    echo "#################################################################"
+
+    read -p "Proceed with these settings? (y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        error "Installation canceled"
+        exit 1
+    fi
+}
+
+get_nodetype () {
+    NODETYPE=$(whiptail --title "ELK Setup" --menu "What type of server do you want to build?" 0 0 10 \
+        "Standalone" "     A single ELK server" \
+        "First" "     First node in a cluster - indexes and dashboards will be imported" \
+        "Additional" "     Additional node in a cluster - skips importing data" \
+        3>&1 1>&2 2>&3) || error "Installation canceled"
+}
+
+get_clustername () {
+    CLUSTERNAME=$(whiptail --title "ELK Setup" --inputbox "Enter the cluster name:" 0 0 "elk-logging" 3>&1 1>&2 2>&3) || error "Installation canceled"
+
+    if [ -z "$CLUSTERNAME" ]; then
+        error "Cluster name can not be empty"
+    fi
+}
+
+get_hosts () {
+    HOSTIP=$(hostname -I)
+    HOSTSSTRING=$(whiptail --title "ELK Setup" --inputbox "List the IP addresses of all the hosts in the cluster, including this one, separated by spaces:" 0 0 "$HOSTIP" 3>&1 1>&2 2>&3) || error "Installation canceled"
+    if [ -z "$HOSTSSTRING" ]; then
+        error "You must specify the IP addresses of the hosts in the cluster"
+    fi
+
+    IFS=', ' read -r -a HOSTS <<< "$HOSTSSTRING"
+    NODECOUNT=${#HOSTS[@]}
+    if [ $NODECOUNT -lt 3 ]; then
+        error "You must have at least 3 nodes to prevent split-brain problems. If you want a single node, choose Standalone."
+    fi
+    # Calculate how many nodes needed to make a quorum - has to be >50% of nodes or split brain can occur, where two isolated groups of nodes have different masters and diverge from each other.
+    MINIMUMMASTERS=$(($NODECOUNT / 2 + 1 ))
+
 }
 
 install_packages () {
@@ -90,11 +164,27 @@ start_kibana () {
     done
 }
 
-configure_elasticsearch_standalone () {
-    status "Configuring elasticsearch"
-    echo "network.host: localhost" >> /etc/elasticsearch/elasticsearch.yml
+configure_elasticsearch () {
+    status "Configuring elasticsearch as $NODETYPE node"
+
+    echo "node.name: \${HOSTNAME}" >> /etc/elasticsearch/elasticsearch.yml
     echo "xpack.monitoring.collection.enabled: true" >> /etc/elasticsearch/elasticsearch.yml
-    echo "node.name: ${HOSTNAME}" >> /etc/elasticsearch/elasticsearch.yml
+
+    if [ "$NODETYPE" == "Standalone" ]; then
+        echo "network.host: localhost" >> /etc/elasticsearch/elasticsearch.yml
+    else
+        echo "network.host: [ _local_, _site_ ]" >> /etc/elasticsearch/elasticsearch.yml
+        echo "cluster.name: $CLUSTERNAME" >> /etc/elasticsearch/elasticsearch.yml
+        echo "discovery.zen.minimum_master_nodes: $MINIMUMMASTERS" >> /etc/elasticsearch/elasticsearch.yml
+        echo "discovery.zen.ping.unicast.hosts:" >> /etc/elasticsearch/elasticsearch.yml
+        for i in "${HOSTS[@]}"; do
+            echo "  - $i" >> /etc/elasticsearch/elasticsearch.yml
+        done
+        echo "cluster.initial_master_nodes: " >> /etc/elasticsearch/elasticsearch.yml
+        for i in "${HOSTS[@]}"; do
+            echo "  - $i" >> /etc/elasticsearch/elasticsearch.yml
+        done
+    fi
 }
 
 configure_apache () {
@@ -117,7 +207,7 @@ configure_logstash () {
     gunzip /etc/logstash/GeoLite2-City.mmdb.gz
 }
 
-configure_kibana () {
+load_kibana_data () {
     status "Importing kibana spaces and saved objects"
     /usr/bin/python3 ./kibana/import-spaces.py
 }
@@ -156,3 +246,4 @@ start_services () {
 }
 
 main
+
