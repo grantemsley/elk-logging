@@ -204,18 +204,19 @@ configure_elasticsearch () {
         for i in "${HOSTS[@]}"; do
             echo "  - $i" >> /etc/elasticsearch/elasticsearch.yml
         done
-	fi
-
-    # Find the elasticsearch version. 6.x needs discovery.zen.minimum_master_nodes, 7.x needs cluster.initial_master_nodes
-    ESVERSION=$(dpkg-query --showformat='${Version}' --show elasticsearch | cut -d "." -f1)
-    if [ "$ESVERSION" -eq 7 ]; then
-        echo "cluster.initial_master_nodes: " >> /etc/elasticsearch/elasticsearch.yml
-        for i in "${HOSTS[@]}"; do
-            echo "  - $i" >> /etc/elasticsearch/elasticsearch.yml
-        done
-    else
-        echo "discovery.zen.minimum_master_nodes: $MINIMUMMASTERS" >> /etc/elasticsearch/elasticsearch.yml
+        
+        # Find the elasticsearch version. 6.x needs discovery.zen.minimum_master_nodes, 7.x needs cluster.initial_master_nodes
+        ESVERSION=$(dpkg-query --showformat='${Version}' --show elasticsearch | cut -d "." -f1)
+        if [ "$ESVERSION" -eq 7 ]; then
+            echo "cluster.initial_master_nodes: " >> /etc/elasticsearch/elasticsearch.yml
+            for i in "${HOSTS[@]}"; do
+                echo "  - $i" >> /etc/elasticsearch/elasticsearch.yml
+            done
+        else
+            echo "discovery.zen.minimum_master_nodes: $MINIMUMMASTERS" >> /etc/elasticsearch/elasticsearch.yml
+        fi
     fi
+
 }
 
 configure_apache () {
