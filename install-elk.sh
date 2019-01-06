@@ -147,7 +147,7 @@ install_packages () {
 start_elasticsearch () {
     status "Starting elasticsearch"
     systemctl start elasticsearch
-    while [ $(curl --write-out %{http_code} --silent --output /dev/null http://localhost:9200/cluster/health) != 200 ]; do
+    while [ $(curl --write-out %{http_code} --silent --output /dev/null http://localhost:9200/_cluster/health) != 200 ]; do
         info "Waiting for elasticsearch to start... check for errors in /var/log/elasticsearch/ if stuck here"
         sleep 2
     done
