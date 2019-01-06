@@ -12,6 +12,7 @@ main () {
     if [ "$NODETYPE" == "ImportOnly" ]; then
         load_index_templates
         load_kibana_data
+        load_metricbeat_data
     else
 	    status "Creating $NODETYPE ELK node"
         install_packages
@@ -20,6 +21,7 @@ main () {
         configure_curator
         configure_logstash
         configure_firewall
+        configure_metricbeat
     
         # On standalone nodes, or the last node in a cluster, load the index templates, kibana spaces, and configure curator
         # Only has to be done on one node - index templates and kibana data are stored in elasticsearch for the entire cluster
@@ -28,6 +30,7 @@ main () {
             load_index_templates
             start_kibana
             load_kibana_data
+            load_metricbeat_data
         fi
         start_services
     fi
@@ -137,7 +140,7 @@ install_packages () {
     status "Installing OpenJDK 8"
     apt-get install -qq openjdk-8-jdk > /dev/null
     status "Installing the rest of the packages"
-    apt-get install -qq apache2 elasticsearch kibana logstash elasticsearch-curator > /dev/null
+    apt-get install -qq apache2 elasticsearch kibana logstash elasticsearch-curator metricbeat > /dev/null
 }
 
 # Starts elasticsearch and waits for it to be listening on localhost
@@ -169,6 +172,21 @@ start_kibana () {
         info "Waiting for kibana to start..."
         sleep 2
     done
+}
+
+configure_metricbeat() {
+    status "Configuring metricbeat"
+    sed -i '/  #host: "localhost:5601"/c\  host: "localhost:5601"' /etc/metricbeat/metricbeat.yml
+    sed -i '/#xpack.monitoring.enabled: false/c\xpack.monitoring.enabled: true' /etc/metricbeat/metricbeat.yml
+    sed -i '/#xpack.monitoring.elasticsearch:/c\xpack.monitoring.elasticsearch:' /etc/metricbeat/metricbeat.yml
+    # These aren't needed - xpack monitoring collects more data than these
+    #/usr/bin/metricbeat modules enable logstash
+    #/usr/bin/metricbeat modules enable kibana
+    #/usr/bin/metricbeat modules enable elasticsearch
+}
+
+load_metricbeat_data () {
+    /usr/bin/metricbeat setup > /dev/null
 }
 
 configure_elasticsearch () {
@@ -258,9 +276,11 @@ start_services () {
     systemctl enable logstash.service > /dev/null
     systemctl enable kibana.service > /dev/null
     systemctl enable elasticsearch.service > /dev/null
+    systemctl enable metricbeat.service > /dev/null
     systemctl start elasticsearch
     systemctl start kibana
     systemctl start logstash
+    systemctl start metricbeat
     systemctl restart apache2
 }
 
