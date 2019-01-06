@@ -44,8 +44,6 @@
         <Select Path="Security">*[System[(EventID=4964)]]</Select>
         <!-- 5378 The requested credentials delegation was disallowed by policy. -->
         <Select Path="Security">*[System[(EventID=5378)]]</Select>
-        <!-- Suppress SECURITY_LOCAL_SYSTEM_RID A special account used by the OS, noisy -->
-        <Suppress Path="Security">*[EventData[Data[1]="S-1-5-18"]]</Suppress>
       </Query>
     </QueryList>]]></Query>
   <ReadExistingEvents>true</ReadExistingEvents>
