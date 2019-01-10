@@ -12,6 +12,8 @@ winlogbeat.event_logs:
   - name: "Microsoft-Windows-WindowsUpdateClient/Operational"
     event_id: 20,24,25,31,34,35
     ignore_older: 72h
+  - name: "Microsoft-Windows-NTLM/Operational"
+    ignore_older: 72h
 tags: ["DC"]
 
 output.logstash:
