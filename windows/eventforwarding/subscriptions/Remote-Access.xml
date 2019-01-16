@@ -1,0 +1,30 @@
+<Subscription xmlns="http://schemas.microsoft.com/2006/03/windows/events/subscription">
+        <SubscriptionId>Remote-Access</SubscriptionId>
+        <SubscriptionType>SourceInitiated</SubscriptionType>
+        <Description>RRAS Events</Description>
+        <Enabled>true</Enabled>
+        <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
+        <ConfigurationMode>Normal</ConfigurationMode>
+        <Delivery Mode="Push">
+                <Batching>
+                        <MaxLatencyTime>900000</MaxLatencyTime>
+                </Batching>
+                <PushSettings>
+                        <Heartbeat Interval="900000"/>
+                </PushSettings>
+        </Delivery>
+        <Query><![CDATA[
+          <QueryList>
+		    <Query Id="0">
+			  <Select Path="System">*[System[Provider[@Name='RemoteAccess']]]</Select>
+			</Query>
+	      </QueryList>]]>
+        </Query>
+        <ReadExistingEvents>true</ReadExistingEvents>
+        <TransportName>HTTP</TransportName>
+        <ContentFormat>RenderedText</ContentFormat>
+        <Locale Language="en-US"/>
+        <LogFile>ForwardedEvents</LogFile>
+        <AllowedSourceNonDomainComputers></AllowedSourceNonDomainComputers>
+        <AllowedSourceDomainComputers>O:NSG:NSD:(A;;GA;;;DC)(A;;GA;;;NS)</AllowedSourceDomainComputers>
+</Subscription>
