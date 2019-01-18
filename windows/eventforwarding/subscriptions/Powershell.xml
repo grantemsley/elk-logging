@@ -2,7 +2,7 @@
   <SubscriptionId>Powershell</SubscriptionId>
   <SubscriptionType>SourceInitiated</SubscriptionType>
   <Description>Events from Microsoft\PowerShell\Operational</Description>
-  <Enabled>true</Enabled>
+  <Enabled>false</Enabled>
   <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
   <ConfigurationMode>Custom</ConfigurationMode>
   <Delivery Mode="Push">
