@@ -2,7 +2,7 @@
   <SubscriptionId>WMI</SubscriptionId>
   <SubscriptionType>SourceInitiated</SubscriptionType>
   <Description>Window Management Instrumentation events.</Description>
-  <Enabled>true</Enabled>
+  <Enabled>false</Enabled>
   <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
   <ConfigurationMode>Custom</ConfigurationMode>
   <Delivery Mode="Push">
