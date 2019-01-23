@@ -216,7 +216,10 @@ configure_elasticsearch () {
             echo "discovery.zen.minimum_master_nodes: $MINIMUMMASTERS" >> /etc/elasticsearch/elasticsearch.yml
         fi
     fi
-
+    
+    status "Setting heap size to 8GB"
+    sed -i '/-Xms1g/c\-Xms8g' /etc/elasticsearch/jvm.options
+    sed -i '/-Xmx1g/c\-Xmx8g' /etc/elasticsearch/jvm.options
 }
 
 configure_apache () {
