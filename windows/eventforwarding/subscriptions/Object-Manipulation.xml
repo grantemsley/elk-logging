@@ -23,10 +23,11 @@
         <!-- 4817: Auditing settings on object were changed. -->
         <!-- 4656: A handle to an object was requested. -->
         <!-- 4658: The handle to an object was closed. -->
+        <!-- 4659: A handle to an object was requested with intent to delete. (seems to be logged instead of 4660/4663 under some conditions) -->
         <!-- 4660: An object was deleted. -->
         <!-- 4663: An attempt was made to access an object. -->
         <!-- 4670: Permissions on an object were changed. -->
-        <Select Path="Security">*[System[(EventID=4715 or EventID=4817 or EventID=4656 or EventID=4658 or EventID=4660 or EventID=4663 or EventID=4670)]]</Select>
+        <Select Path="Security">*[System[(EventID=4715 or EventID=4817 or EventID=4656 or EventID=4658 or or EventID=4659 or EventID=4660 or EventID=4663 or EventID=4670)]]</Select>
       </Query>
     </QueryList>]]></Query>
     <ReadExistingEvents>true</ReadExistingEvents>
