@@ -217,7 +217,7 @@ configure_elasticsearch () {
         fi
     fi
     
-    status "Setting heap size to 8GB"
+    status "Setting elasticsearch heap size to 8GB"
     sed -i '/-Xms1g/c\-Xms8g' /etc/elasticsearch/jvm.options
     sed -i '/-Xmx1g/c\-Xmx8g' /etc/elasticsearch/jvm.options
 }
@@ -240,6 +240,11 @@ configure_logstash () {
     status "Downloading geoip database"
     wget --quiet http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz -O /etc/logstash/GeoLite2-City.mmdb.gz
     gunzip /etc/logstash/GeoLite2-City.mmdb.gz
+    
+    status "Setting logstash heap size to 2GB"
+    sed -i '/-Xms1g/c\-Xms2g' /etc/logstash/jvm.options
+    sed -i '/-Xmx1g/c\-Xmx2g' /etc/logstash/jvm.options
+
 }
 
 load_kibana_data () {
