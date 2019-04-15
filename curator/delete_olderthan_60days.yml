@@ -7,7 +7,7 @@ actions:
     filters:
       - filtertype: age
         source: name
-        timestring: '%Y-%m-%d'
+        timestring: '%Y.%m.%d'
         unit: days
         unit_count: 60
         direction: older
