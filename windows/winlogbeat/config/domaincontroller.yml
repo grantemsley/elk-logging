@@ -3,10 +3,28 @@ winlogbeat.event_logs:
     ignore_older: 72h
   - name: Security
   - name: System
-  - name: "Microsoft-Windows-TerminalServices-RDPClient/Operational,Microsoft-Windows-TerminalServices-LocalSessionManager/Admin,Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"
+  - name: Microsoft-Windows-TerminalServices-RDPClient/Operational
     event_id: 23,24,25,1102
     ignore_older: 72h
-  - name: "Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurity,Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurityVerbose,Microsoft-Windows-Windows Firewall With Advanced Security/Firewall,Microsoft-Windows-Windows Firewall With Advanced Security/FirewallVerbose,Microsoft-Windows-Windows Firewall With Advanced Security/Network Isolation Operational"
+  - name: Microsoft-Windows-TerminalServices-LocalSessionManager/Admin
+    event_id: 23,24,25,1102
+    ignore_older: 72h
+  - name: Microsoft-Windows-TerminalServices-LocalSessionManager/Operational
+    event_id: 23,24,25,1102
+    ignore_older: 72h
+  - name: Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurity
+    event_id: 2004,2005,2006,2033,2009
+    ignore_older: 72h
+  - name: Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurityVerbose
+    event_id: 2004,2005,2006,2033,2009
+    ignore_older: 72h
+  - name: Microsoft-Windows-Windows Firewall With Advanced Security/Firewall
+    event_id: 2004,2005,2006,2033,2009
+    ignore_older: 72h
+  - name: Microsoft-Windows-Windows Firewall With Advanced Security/FirewallVerbose
+    event_id: 2004,2005,2006,2033,2009
+    ignore_older: 72h
+  - name: Microsoft-Windows-Windows Firewall With Advanced Security/Network Isolation Operational
     event_id: 2004,2005,2006,2033,2009
     ignore_older: 72h
   - name: "Microsoft-Windows-WindowsUpdateClient/Operational"
@@ -14,6 +32,10 @@ winlogbeat.event_logs:
     ignore_older: 72h
   - name: "Microsoft-Windows-NTLM/Operational"
     ignore_older: 72h
+  - name: Microsoft-AzureADPasswordProtection-DCAgent/Admin
+  - name: Microsoft-AzureADPasswordProtection-DCAgent/Operational
+  - name: Microsoft-AzureADPasswordProtection-ProxyService/Admin
+  - name: Microsoft-AzureADPasswordProtection-ProxyService/Operational
 tags: ["DC"]
 
 output.logstash:
