@@ -36,6 +36,8 @@ winlogbeat.event_logs:
   - name: Microsoft-AzureADPasswordProtection-DCAgent/Operational
   - name: Microsoft-AzureADPasswordProtection-ProxyService/Admin
   - name: Microsoft-AzureADPasswordProtection-ProxyService/Operational
+  - name: "Directory Service"
+  - name: "DFS Replication"
 tags: ["DC"]
 
 output.logstash:
